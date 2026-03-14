@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ย่างเนย ปิ่นเกล้า</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .upload-box {
+      border: 2px dashed #d1d5db;
+      border-radius: 14px;
+      transition: border-color 0.2s, background-color 0.2s;
+      cursor: pointer;
+    }
+    .upload-box:active { background-color: #fff7ed; }
+    .upload-box.has-file {
+      border-color: #22c55e;
+      border-style: solid;
+      background-color: #f0fdf4;
+    }
+    .img-preview {
+      width: 100%;
+      max-height: 140px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { animation: spin 0.8s linear infinite; }
+    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; }
+  </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen pb-10">
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay"
+    class="fixed inset-0 bg-black/60 flex flex-col items-center justify-center z-50 hidden"
+    aria-live="polite">
+    <div class="bg-white rounded-2xl px-8 py-7 mx-6 text-center shadow-2xl w-72">
+      <div class="flex justify-center mb-4">
+        <svg class="spinner h-14 w-14 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+      </div>
+      <p class="text-gray-800 font-bold text-lg leading-snug">กำลังอัปโหลดข้อมูล...</p>
+      <p class="text-gray-400 text-sm mt-1">กรุณารอสักครู่<br>อย่าปิดหน้าจอหรือกดส่งซ้ำ</p>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-orange-500 to-orange-400 text-white px-5 py-5 shadow-lg">
+    <div class="max-w-lg mx-auto">
+      <p class="text-orange-100 text-xs uppercase tracking-widest mb-0.5">ระบบบันทึกข้อมูล</p>
+      <h1 class="text-2xl font-black tracking-tight">ย่างเนย ปิ่นเกล้า 🍖</h1>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <form id="mainForm" novalidate class="max-w-lg mx-auto px-4 pt-5 space-y-4">
+
+    <!-- วันที่ -->
+    <div class="bg-white rounded-2xl shadow-sm p-5">
+      <label class="block text-sm font-semibold text-gray-700 mb-2">
+        📅 วันที่ดำเนินการ <span class="text-red-500">*</span>
+      </label>
+      <input type="date" id="actionDate" required
+        class="w-full border border-gray-200 rounded-xl px-4 py-3 text-base
+               focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent
+               appearance-none bg-white" />
+    </div>
+
+    <!-- ประเภทรายการหลัก -->
+    <div class="bg-white rounded-2xl shadow-sm p-5">
+      <label class="block text-sm font-semibold text-gray-700 mb-2">
+        📋 ประเภทรายการ <span class="text-red-500">*</span>
+      </label>
+      <select id="mainCategory" required onchange="onMainCategoryChange()"
+        class="w-full border border-gray-200 rounded-xl px-4 py-3 text-base
+               focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white appearance-none">
+        <option value="">-- เลือกประเภทรายการ --</option>
+        <option value="แจ้งซ่อมแซม">🔧 แจ้งซ่อมแซม</option>
+        <option value="ซื้ออุปกรณ์เพิ่ม">🛒 ซื้ออุปกรณ์เพิ่ม</option>
+      </select>
+    </div>
+
+    <!-- หมวดหมู่ย่อย -->
+    <div id="subCategoryCard" class="bg-white rounded-2xl shadow-sm p-5 hidden">
+      <label class="block text-sm font-semibold text-gray-700 mb-2">
+        🏷️ หมวดหมู่ย่อย <span class="text-red-500">*</span>
+      </label>
+      <select id="subCategory" required onchange="onSubCategoryChange()"
+        class="w-full border border-gray-200 rounded-xl px-4 py-3 text-base
+               focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white appearance-none">
+        <option value="">-- เลือกหมวดหมู่ --</option>
+      </select>
+      <div id="otherBox" class="mt-3 hidden">
+        <input type="text" id="otherText" placeholder="กรุณาระบุรายละเอียด เช่น ประตู, ตู้เย็น..."
+          class="w-full border border-orange-300 rounded-xl px-4 py-3 text-base
+                 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-orange-50" />
+      </div>
+    </div>
+
+    <!-- อัปโหลดรูปภาพ -->
+    <div class="bg-white rounded-2xl shadow-sm p-5">
+      <h2 class="text-sm font-semibold text-gray-700 mb-4">📸 อัปโหลดรูปภาพ</h2>
+      <div class="space-y-4">
+
+        <div>
+          <p class="text-xs font-medium text-gray-500 mb-1.5">1. รูปก่อนซ่อม / สภาพเดิม</p>
+          <div class="upload-box p-4 text-center" id="box1" onclick="document.getElementById('img1').click()">
+            <img id="preview1" class="img-preview hidden mb-2" alt="preview 1" />
+            <div id="ph1" class="py-1"><div class="text-2xl">📷</div><p class="text-gray-400 text-sm mt-1">แตะเพื่อเลือกรูป</p></div>
+            <input type="file" id="img1" accept="image/*" capture="environment" class="hidden" onchange="handlePreview(this,'preview1','ph1','box1')" />
+          </div>
+        </div>
+
+        <div>
+          <p class="text-xs font-medium text-gray-500 mb-1.5">2. รูปหลังซ่อม / ของที่ซื้อมา</p>
+          <div class="upload-box p-4 text-center" id="box2" onclick="document.getElementById('img2').click()">
+            <img id="preview2" class="img-preview hidden mb-2" alt="preview 2" />
+            <div id="ph2" class="py-1"><div class="text-2xl">📷</div><p class="text-gray-400 text-sm mt-1">แตะเพื่อเลือกรูป</p></div>
+            <input type="file" id="img2" accept="image/*" capture="environment" class="hidden" onchange="handlePreview(this,'preview2','ph2','box2')" />
+          </div>
+        </div>
+
+        <div>
+          <p class="text-xs font-medium text-gray-500 mb-1.5">3. รูปใบเสนอราคา / บิลเรียกเก็บเงิน</p>
+          <div class="upload-box p-4 text-center" id="box3" onclick="document.getElementById('img3').click()">
+            <img id="preview3" class="img-preview hidden mb-2" alt="preview 3" />
+            <div id="ph3" class="py-1"><div class="text-2xl">📷</div><p class="text-gray-400 text-sm mt-1">แตะเพื่อเลือกรูป</p></div>
+            <input type="file" id="img3" accept="image/*" capture="environment" class="hidden" onchange="handlePreview(this,'preview3','ph3','box3')" />
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- รายละเอียด + ยอดเงิน -->
+    <div class="bg-white rounded-2xl shadow-sm p-5 space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">📝 รายละเอียดเพิ่มเติม</label>
+        <textarea id="details" rows="3"
+          placeholder="เช่น ซ่อมแอร์ห้องVIP หมายเลขเครื่อง A3 รั่วซึมที่ท่อน้ำ..."
+          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-base
+                 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">💰 ยอดเงินรวม (บาท)</label>
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">฿</span>
+          <input type="number" id="totalAmount" min="0" step="0.01" placeholder="0.00"
+            class="w-full border border-gray-200 rounded-xl pl-8 pr-4 py-3 text-base
+                   focus:outline-none focus:ring-2 focus:ring-orange-400" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <button type="button" id="submitBtn" onclick="submitForm()"
+      class="w-full bg-orange-500 hover:bg-orange-600 active:scale-[0.98] active:bg-orange-700
+             text-white font-extrabold py-4 rounded-2xl text-lg shadow-lg
+             transition-all duration-150 flex items-center justify-center gap-2
+             disabled:opacity-50 disabled:cursor-not-allowed">
+      <span id="btnIcon">✅</span>
+      <span id="btnText">ส่งข้อมูล</span>
+    </button>
+
+    <p class="text-center text-xs text-gray-300 pt-2">ย่างเนย ปิ่นเกล้า &copy; 2025</p>
+
+  </form>
+
+  <script>
+    const LIFF_ID = '2009450586-EmshKp4C';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycby4isc4HYJ5k0wT2rIgm5MIbGH0vBWXIoM3IAlCaqm5WIyntyzbHKu7t6pagBzE6YDbCw/exec';
+
+    const SUB_OPTIONS = {
+      'แจ้งซ่อมแซม': ['เครื่องปรับอากาศ','ผ้าใบ/หลังคาผ้าใบ','เครื่องสไลด์','ลอกท่อ','ซาเล้ง','อื่นๆ (ระบุเอง)'],
+      'ซื้ออุปกรณ์เพิ่ม': ['เตาหมูกระทะ','เตาย่างเนย','กระทะหมูกระทะแบน','กระทะหมูกระทะกลม','ขาเหล็ก','หม้อดินเผา','หม้อทองเกาหลี','อื่นๆ (ระบุเอง)']
+    };
+
+    let isSubmitting = false;
+
+    (async () => {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) liff.login();
+      } catch (e) {
+        console.warn('LIFF init skipped:', e.message);
+      }
+    })();
+
+    document.getElementById('actionDate').value = new Date().toISOString().slice(0, 10);
+
+    function onMainCategoryChange() {
+      const main = document.getElementById('mainCategory').value;
+      const subCard = document.getElementById('subCategoryCard');
+      const subSelect = document.getElementById('subCategory');
+      subSelect.innerHTML = '<option value="">-- เลือกหมวดหมู่ --</option>';
+      document.getElementById('otherBox').classList.add('hidden');
+      document.getElementById('otherText').value = '';
+      if (!main) { subCard.classList.add('hidden'); return; }
+      (SUB_OPTIONS[main] || []).forEach(opt => {
+        const el = document.createElement('option');
+        el.value = el.textContent = opt;
+        subSelect.appendChild(el);
+      });
+      subCard.classList.remove('hidden');
+    }
+
+    function onSubCategoryChange() {
+      const val = document.getElementById('subCategory').value;
+      document.getElementById('otherBox').classList.toggle('hidden', val !== 'อื่นๆ (ระบุเอง)');
+    }
+
+    function handlePreview(input, previewId, placeholderId, boxId) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = document.getElementById(previewId);
+        img.src = e.target.result;
+        img.classList.remove('hidden');
+        document.getElementById(placeholderId).classList.add('hidden');
+        document.getElementById(boxId).classList.add('has-file');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve) => {
+        if (!file) return resolve(null);
+        const reader = new FileReader();
+        reader.onload = () => resolve({ base64: reader.result.split(',')[1], name: file.name, type: file.type || 'image/jpeg' });
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function setLoading(on) {
+      isSubmitting = on;
+      document.getElementById('loadingOverlay').classList.toggle('hidden', !on);
+      document.getElementById('submitBtn').disabled = on;
+      document.getElementById('btnIcon').textContent = on ? '' : '✅';
+      document.getElementById('btnText').textContent = on ? 'กำลังส่ง...' : 'ส่งข้อมูล';
+    }
+
+    function validate() {
+      const date = document.getElementById('actionDate').value;
+      const main = document.getElementById('mainCategory').value;
+      const sub  = document.getElementById('subCategory').value;
+      if (!date) { alert('⚠️ กรุณาเลือกวันที่ดำเนินการ'); return false; }
+      if (!main) { alert('⚠️ กรุณาเลือกประเภทรายการ');   return false; }
+      if (!sub)  { alert('⚠️ กรุณาเลือกหมวดหมู่ย่อย');  return false; }
+      if (sub === 'อื่นๆ (ระบุเอง)' && !document.getElementById('otherText').value.trim()) {
+        alert('⚠️ กรุณาระบุรายละเอียดหมวดหมู่ย่อย'); return false;
+      }
+      return true;
+    }
+
+    async function submitForm() {
+      if (isSubmitting) return;
+      if (!validate()) return;
+      setLoading(true);
+      try {
+        let userName = 'ไม่ระบุ', userId = 'ไม่ระบุ';
+        try {
+          const profile = await liff.getProfile();
+          userName = profile.displayName;
+          userId   = profile.userId;
+        } catch (_) {}
+
+        const [img1, img2, img3] = await Promise.all([
+          fileToBase64(document.getElementById('img1').files[0]),
+          fileToBase64(document.getElementById('img2').files[0]),
+          fileToBase64(document.getElementById('img3').files[0])
+        ]);
+
+        let sub = document.getElementById('subCategory').value;
+        if (sub === 'อื่นๆ (ระบุเอง)') sub = 'อื่นๆ: ' + document.getElementById('otherText').value.trim();
+
+        const payload = {
+          date:         document.getElementById('actionDate').value,
+          mainCategory: document.getElementById('mainCategory').value,
+          subCategory:  sub,
+          details:      document.getElementById('details').value.trim(),
+          totalAmount:  document.getElementById('totalAmount').value || '0',
+          userName, userId, img1, img2, img3
+        };
+
+        const res  = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const json = await res.json();
+        setLoading(false);
+
+        if (json.status === 'success') {
+          alert('✅ บันทึกข้อมูลสำเร็จ!\nขอบคุณที่แจ้งข้อมูลครับ 🙏');
+          resetForm();
+        } else {
+          throw new Error(json.message || 'เกิดข้อผิดพลาดจาก Server');
+        }
+      } catch (err) {
+        setLoading(false);
+        alert('❌ เกิดข้อผิดพลาด:\n' + err.message + '\n\nกรุณาลองใหม่อีกครั้ง');
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('actionDate').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('mainCategory').value = '';
+      document.getElementById('subCategoryCard').classList.add('hidden');
+      document.getElementById('subCategory').innerHTML = '<option value="">-- เลือกหมวดหมู่ --</option>';
+      document.getElementById('otherBox').classList.add('hidden');
+      document.getElementById('otherText').value = '';
+      document.getElementById('details').value = '';
+      document.getElementById('totalAmount').value = '';
+      ['1','2','3'].forEach(n => {
+        document.getElementById('img'+n).value = '';
+        const prev = document.getElementById('preview'+n);
+        prev.src = ''; prev.classList.add('hidden');
+        document.getElementById('ph'+n).classList.remove('hidden');
+        document.getElementById('box'+n).classList.remove('has-file');
+      });
+    }
+  </script>
+
+</body>
+</html>
