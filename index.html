@@ -106,46 +106,49 @@
 
         <div>
           <p class="text-xs font-medium text-gray-500 mb-1.5">1. รูปก่อนซ่อม / สภาพเดิม</p>
-          <div class="upload-box p-4 text-center" id="box1" onclick="document.getElementById('img1').click()">
+          <label for="img1" class="upload-box p-4 text-center block" id="box1">
             <div id="thumbs1" class="thumb-grid hidden"></div>
             <div id="ph1" class="py-1">
               <div class="text-2xl">📷</div>
               <p class="text-gray-400 text-sm mt-1">แตะเพื่อเลือกรูป</p>
               <p class="text-gray-300 text-xs mt-0.5">เลือกได้หลายรูปพร้อมกัน</p>
             </div>
-            <input type="file" id="img1" accept="image/*" multiple class="hidden"
+            <input type="file" id="img1" accept="image/*" multiple
+              style="position:absolute;width:1px;height:1px;opacity:0"
               onchange="handlePreview(this,'thumbs1','ph1','box1','count1')" />
-          </div>
+          </label>
           <p id="count1" class="text-xs text-green-600 mt-1 hidden"></p>
         </div>
 
         <div>
           <p class="text-xs font-medium text-gray-500 mb-1.5">2. รูปหลังซ่อม / ของที่ซื้อมา</p>
-          <div class="upload-box p-4 text-center" id="box2" onclick="document.getElementById('img2').click()">
+          <label for="img2" class="upload-box p-4 text-center block" id="box2">
             <div id="thumbs2" class="thumb-grid hidden"></div>
             <div id="ph2" class="py-1">
               <div class="text-2xl">📷</div>
               <p class="text-gray-400 text-sm mt-1">แตะเพื่อเลือกรูป</p>
               <p class="text-gray-300 text-xs mt-0.5">เลือกได้หลายรูปพร้อมกัน</p>
             </div>
-            <input type="file" id="img2" accept="image/*" multiple class="hidden"
+            <input type="file" id="img2" accept="image/*" multiple
+              style="position:absolute;width:1px;height:1px;opacity:0"
               onchange="handlePreview(this,'thumbs2','ph2','box2','count2')" />
-          </div>
+          </label>
           <p id="count2" class="text-xs text-green-600 mt-1 hidden"></p>
         </div>
 
         <div>
           <p class="text-xs font-medium text-gray-500 mb-1.5">3. รูปใบเสนอราคา / บิลเรียกเก็บเงิน</p>
-          <div class="upload-box p-4 text-center" id="box3" onclick="document.getElementById('img3').click()">
+          <label for="img3" class="upload-box p-4 text-center block" id="box3">
             <div id="thumbs3" class="thumb-grid hidden"></div>
             <div id="ph3" class="py-1">
               <div class="text-2xl">📷</div>
               <p class="text-gray-400 text-sm mt-1">แตะเพื่อเลือกรูป</p>
               <p class="text-gray-300 text-xs mt-0.5">เลือกได้หลายรูปพร้อมกัน</p>
             </div>
-            <input type="file" id="img3" accept="image/*" multiple class="hidden"
+            <input type="file" id="img3" accept="image/*" multiple
+              style="position:absolute;width:1px;height:1px;opacity:0"
               onchange="handlePreview(this,'thumbs3','ph3','box3','count3')" />
-          </div>
+          </label>
           <p id="count3" class="text-xs text-green-600 mt-1 hidden"></p>
         </div>
 
@@ -254,10 +257,24 @@
     function filesToBase64(fileList) {
       return Promise.all(Array.from(fileList).map(file =>
         new Promise(resolve => {
-          const reader = new FileReader();
-          reader.onload = () => resolve({ base64: reader.result.split(',')[1], name: file.name, type: file.type || 'image/jpeg' });
-          reader.onerror = () => resolve(null);
-          reader.readAsDataURL(file);
+          const img = new Image();
+          const url = URL.createObjectURL(file);
+          img.onload = () => {
+            const MAX = 1280;
+            let w = img.width, h = img.height;
+            if (w > MAX || h > MAX) {
+              if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+              else { w = Math.round(w * MAX / h); h = MAX; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            URL.revokeObjectURL(url);
+            const base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+            resolve({ base64, name: file.name.replace(/\.[^.]+$/, '.jpg'), type: 'image/jpeg' });
+          };
+          img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+          img.src = url;
         })
       ));
     }
