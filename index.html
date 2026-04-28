@@ -20,12 +20,8 @@
       border-style: solid;
       background-color: #f0fdf4;
     }
-    .img-preview {
-      width: 100%;
-      max-height: 140px;
-      object-fit: cover;
-      border-radius: 10px;
-    }
+    .thumb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+    .thumb-grid img { width: 100%; height: 80px; object-fit: cover; border-radius: 8px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .spinner { animation: spin 0.8s linear infinite; }
     select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; }
@@ -105,34 +101,52 @@
 
     <!-- อัปโหลดรูปภาพ -->
     <div class="bg-white rounded-2xl shadow-sm p-5">
-      <h2 class="text-sm font-semibold text-gray-700 mb-4">📸 อัปโหลดรูปภาพ</h2>
+      <h2 class="text-sm font-semibold text-gray-700 mb-4">📸 อัปโหลดรูปภาพ (เลือกได้หลายรูป)</h2>
       <div class="space-y-4">
 
         <div>
           <p class="text-xs font-medium text-gray-500 mb-1.5">1. รูปก่อนซ่อม / สภาพเดิม</p>
           <div class="upload-box p-4 text-center" id="box1" onclick="document.getElementById('img1').click()">
-            <img id="preview1" class="img-preview hidden mb-2" alt="preview 1" />
-            <div id="ph1" class="py-1"><div class="text-2xl">📷</div><p class="text-gray-400 text-sm mt-1">แตะเพื่อเลือกรูป</p></div>
-            <input type="file" id="img1" accept="image/*" class="hidden" onchange="handlePreview(this,'preview1','ph1','box1')" />
+            <div id="thumbs1" class="thumb-grid hidden"></div>
+            <div id="ph1" class="py-1">
+              <div class="text-2xl">📷</div>
+              <p class="text-gray-400 text-sm mt-1">แตะเพื่อเลือกรูป</p>
+              <p class="text-gray-300 text-xs mt-0.5">เลือกได้หลายรูปพร้อมกัน</p>
+            </div>
+            <input type="file" id="img1" accept="image/*" multiple class="hidden"
+              onchange="handlePreview(this,'thumbs1','ph1','box1','count1')" />
           </div>
+          <p id="count1" class="text-xs text-green-600 mt-1 hidden"></p>
         </div>
 
         <div>
           <p class="text-xs font-medium text-gray-500 mb-1.5">2. รูปหลังซ่อม / ของที่ซื้อมา</p>
           <div class="upload-box p-4 text-center" id="box2" onclick="document.getElementById('img2').click()">
-            <img id="preview2" class="img-preview hidden mb-2" alt="preview 2" />
-            <div id="ph2" class="py-1"><div class="text-2xl">📷</div><p class="text-gray-400 text-sm mt-1">แตะเพื่อเลือกรูป</p></div>
-            <input type="file" id="img2" accept="image/*" class="hidden" onchange="handlePreview(this,'preview2','ph2','box2')" />
+            <div id="thumbs2" class="thumb-grid hidden"></div>
+            <div id="ph2" class="py-1">
+              <div class="text-2xl">📷</div>
+              <p class="text-gray-400 text-sm mt-1">แตะเพื่อเลือกรูป</p>
+              <p class="text-gray-300 text-xs mt-0.5">เลือกได้หลายรูปพร้อมกัน</p>
+            </div>
+            <input type="file" id="img2" accept="image/*" multiple class="hidden"
+              onchange="handlePreview(this,'thumbs2','ph2','box2','count2')" />
           </div>
+          <p id="count2" class="text-xs text-green-600 mt-1 hidden"></p>
         </div>
 
         <div>
           <p class="text-xs font-medium text-gray-500 mb-1.5">3. รูปใบเสนอราคา / บิลเรียกเก็บเงิน</p>
           <div class="upload-box p-4 text-center" id="box3" onclick="document.getElementById('img3').click()">
-            <img id="preview3" class="img-preview hidden mb-2" alt="preview 3" />
-            <div id="ph3" class="py-1"><div class="text-2xl">📷</div><p class="text-gray-400 text-sm mt-1">แตะเพื่อเลือกรูป</p></div>
-            <input type="file" id="img3" accept="image/*" class="hidden" onchange="handlePreview(this,'preview3','ph3','box3')" />
+            <div id="thumbs3" class="thumb-grid hidden"></div>
+            <div id="ph3" class="py-1">
+              <div class="text-2xl">📷</div>
+              <p class="text-gray-400 text-sm mt-1">แตะเพื่อเลือกรูป</p>
+              <p class="text-gray-300 text-xs mt-0.5">เลือกได้หลายรูปพร้อมกัน</p>
+            </div>
+            <input type="file" id="img3" accept="image/*" multiple class="hidden"
+              onchange="handlePreview(this,'thumbs3','ph3','box3','count3')" />
           </div>
+          <p id="count3" class="text-xs text-green-600 mt-1 hidden"></p>
         </div>
 
       </div>
@@ -215,28 +229,37 @@
       document.getElementById('otherBox').classList.toggle('hidden', val !== 'อื่นๆ (ระบุเอง)');
     }
 
-    function handlePreview(input, previewId, placeholderId, boxId) {
-      const file = input.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        const img = document.getElementById(previewId);
-        img.src = e.target.result;
-        img.classList.remove('hidden');
-        document.getElementById(placeholderId).classList.add('hidden');
-        document.getElementById(boxId).classList.add('has-file');
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function fileToBase64(file) {
-      return new Promise((resolve) => {
-        if (!file) return resolve(null);
+    function handlePreview(input, thumbsId, placeholderId, boxId, countId) {
+      const files = Array.from(input.files);
+      if (!files.length) return;
+      const container = document.getElementById(thumbsId);
+      container.innerHTML = '';
+      files.forEach(file => {
         const reader = new FileReader();
-        reader.onload = () => resolve({ base64: reader.result.split(',')[1], name: file.name, type: file.type || 'image/jpeg' });
-        reader.onerror = () => resolve(null);
+        reader.onload = e => {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          container.appendChild(img);
+        };
         reader.readAsDataURL(file);
       });
+      container.classList.remove('hidden');
+      document.getElementById(placeholderId).classList.add('hidden');
+      document.getElementById(boxId).classList.add('has-file');
+      const countEl = document.getElementById(countId);
+      countEl.textContent = `เลือก ${files.length} รูป`;
+      countEl.classList.remove('hidden');
+    }
+
+    function filesToBase64(fileList) {
+      return Promise.all(Array.from(fileList).map(file =>
+        new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload = () => resolve({ base64: reader.result.split(',')[1], name: file.name, type: file.type || 'image/jpeg' });
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(file);
+        })
+      ));
     }
 
     function setLoading(on) {
@@ -272,10 +295,10 @@
           userId   = profile.userId;
         } catch (_) {}
 
-        const [img1, img2, img3] = await Promise.all([
-          fileToBase64(document.getElementById('img1').files[0]),
-          fileToBase64(document.getElementById('img2').files[0]),
-          fileToBase64(document.getElementById('img3').files[0])
+        const [imgs1, imgs2, imgs3] = await Promise.all([
+          filesToBase64(document.getElementById('img1').files),
+          filesToBase64(document.getElementById('img2').files),
+          filesToBase64(document.getElementById('img3').files),
         ]);
 
         let sub = document.getElementById('subCategory').value;
@@ -287,7 +310,10 @@
           subCategory:  sub,
           details:      document.getElementById('details').value.trim(),
           totalAmount:  document.getElementById('totalAmount').value || '0',
-          userName, userId, img1, img2, img3
+          userName, userId,
+          img1: imgs1.filter(Boolean),
+          img2: imgs2.filter(Boolean),
+          img3: imgs3.filter(Boolean),
         };
 
         const res  = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
@@ -317,10 +343,12 @@
       document.getElementById('totalAmount').value = '';
       ['1','2','3'].forEach(n => {
         document.getElementById('img'+n).value = '';
-        const prev = document.getElementById('preview'+n);
-        prev.src = ''; prev.classList.add('hidden');
+        const thumbs = document.getElementById('thumbs'+n);
+        thumbs.innerHTML = ''; thumbs.classList.add('hidden');
         document.getElementById('ph'+n).classList.remove('hidden');
         document.getElementById('box'+n).classList.remove('has-file');
+        const countEl = document.getElementById('count'+n);
+        countEl.textContent = ''; countEl.classList.add('hidden');
       });
     }
   </script>
